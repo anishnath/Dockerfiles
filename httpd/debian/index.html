@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Hello Docker File from 0cloud0.com</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <h1>Hello from Dockerfile APACHE2+PHP+Debian(buster)</h1>
+    <p><a href="http://0cloud0.com" target="_blank">Powered By 0cloud0.com</a></p>
+    <p><a href="http://leanpub.com/dockerfile">From Dockerfile</a></p>
+    <p>Maintainer Anish Nath </p>
+    <pre><code>
+FROM debian
+LABEL org.label-schema.schema-version="HTTPD +PHP debian" \
+    maintainer="https://0cloud0.com" \
+    org.label-schema.vcs-description="HTTPD +PHP " \
+    org.label-schema.docker.cmd="docker run -p80:80 anishnath/dockerfile:httpddebian" \
+    image-size="318MB" \
+    ram-usage="1GB" \
+    cpu-usage="High"
+
+ENV APACHE_RUN_DIR=/var/run/apache2 \
+    APACHE_RUN_USER=www-data \
+    APACHE_RUN_GROUP=www-data \
+    APACHE_LOG_DIR=/var/log/apache2 \
+    APACHE_PID_FILE=/var/run/apache2/apache2.pid
+
+WORKDIR /app/public
+COPY info.php /app/public
+COPY index.html /app/public
+RUN apt-get -y update  && \
+    apt-get -y install libcap2 apache2 php7.3 libapache2-mod-php7.3 php7.3-mysql php7.3-xml \
+    ntp openssl tzdata vim && \
+    rm -rf /var/cache/* && \
+    chown -R www-data:www-data /app && \ 
+    chown -R www-data:www-data /etc/apache2 && \
+    chown -R www-data:www-data /var/www/ && \
+    chown -R www-data:www-data /run/apache2 && \
+    setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2 && \
+    ln -sf /dev/stdout /var/log/apache2/access.log && \
+    ln -sf /dev/stderr /var/log/apache2/error.log && \
+    chown -R www-data:www-data /var/log/apache2
+
+USER www-data
+# Add www-data to run and configure
+RUN sed -i "s#^DocumentRoot \".*#DocumentRoot \"/app/public\"#g" /etc/apache2/apache2.conf && \
+    sed -i "s#/var/www/#/app/public#" /etc/apache2/apache2.conf && \
+    printf "\n<Directory \"/app/public\">\n\tAllowOverride All\n</Directory>\n" >> /etc/apache2/apache2.conf && \
+    sed -i "s#/var/www/html#/app/public#" /etc/apache2/sites-enabled/000-default.conf
+
+EXPOSE 80
+CMD ["apache2", "-D", "FOREGROUND"]
+   </pre> </code>
+    
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+  </body>
+</html>

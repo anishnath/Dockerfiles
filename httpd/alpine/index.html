@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Hello Docker File from 0cloud0.com</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <h1>Hello from Dockerfile APACHE2+PHP</h1>
+    <pre><code>
+FROM alpine:latest
+LABEL org.label-schema.schema-version="HTTPD +PHP Alpine" \
+    maintainer="https://0cloud0.com" \
+    org.label-schema.vcs-description="WildFly App" \
+    org.label-schema.docker.cmd="docker run -p80:80 anishnath/dockerfile:httpd" \
+    image-size="26MB" \
+    ram-usage="1GB" \
+    cpu-usage="High"
+
+WORKDIR /app/public
+COPY info.php /app/public
+COPY index.html /app/public
+RUN set -x \
+    apk add --update  && \
+    apk add libcap  bash apache2 php7-apache2 php7-simplexml \
+    php7 php7-phar php7-json php7-iconv php7-openssl \
+    openntpd openssl tzdata && \
+    rm -f /var/cache/apk/* && \
+    addgroup -g 1000 -S apache2 && \
+    adduser -S -D -H -u 1000 -h /etc/apache2/ -s /sbin/nologin -G apache2 -g apache2 apache2 && \ 
+    chown -R apache2:apache2 /app && \ 
+    chown -R apache2:apache2 /etc/apache2 && \
+    chown -R apache2:apache2 /var/www/ && \
+    chown -R apache2:apache2 /var/log/apache2 && \
+    chown -R apache2:apache2 /run/apache2 && \
+    setcap 'cap_net_bind_service=+ep' /usr/sbin/httpd && \
+    ln -sf /dev/stdout /var/log/apache2/access.log && \
+    ln -sf /dev/stderr /var/log/apache2/error.log
+
+RUN getcap /usr/sbin/httpd
+
+
+USER apache2
+# Add apache to run and configure
+RUN sed -i "s/#LoadModule\ rewrite_module/LoadModule\ rewrite_module/" /etc/apache2/httpd.conf \
+    && sed -i "s/#LoadModule\ session_module/LoadModule\ session_module/" /etc/apache2/httpd.conf \
+    && sed -i "s/#LoadModule\ session_cookie_module/LoadModule\ session_cookie_module/" /etc/apache2/httpd.conf \
+    && sed -i "s/#LoadModule\ session_crypto_module/LoadModule\ session_crypto_module/" /etc/apache2/httpd.conf \
+    && sed -i "s/#LoadModule\ deflate_module/LoadModule\ deflate_module/" /etc/apache2/httpd.conf \
+    && sed -i "s#^DocumentRoot \".*#DocumentRoot \"/app/public\"#g" /etc/apache2/httpd.conf \
+    && sed -i "s#/var/www/localhost/htdocs#/app/public#" /etc/apache2/httpd.conf \
+    && printf "\n<Directory \"/app/public\">\n\tAllowOverride All\n</Directory>\n" >> /etc/apache2/httpd.conf
+
+EXPOSE 80
+CMD ["httpd", "-D", "FOREGROUND"]
+   </pre> </code>
+    <p><a href="http://0cloud0.com" target="_blank">Powered By 0cloud0.com</a></p>
+    <p><a href="http://leanpub.com/dockerfile">From Dockerfile</a></p>
+    <p>Maintainer Anish Nath </p>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Hello Docker File from 0cloud0.com</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <h1>Hello from Dockerfile lighthttpd</h1>
+    <p><a href="http://0cloud0.com" target="_blank">Powered By 0cloud0.com</a></p>
+    <p><a href="http://leanpub.com/dockerfile">From Dockerfile</a></p>
+    <p>Maintainer Anish Nath </p>
+    <pre><code>
+ARG BASE_IMAGE=alpine
+ARG VERSION=3.10
+FROM ${BASE_IMAGE}:${VERSION}
+LABEL org.label-schema.schema-version="lighttpd " \
+    maintainer="https://0cloud0.com" \
+    org.label-schema.vcs-description="Django" \
+    org.label-schema.docker.cmd="docker build -t anishnath/lighttpd:php7 ." \
+    image-size="13.7MB" \
+    ram-usage="13.2MB to 70MB" \
+    cpu-usage="Low"
+
+RUN echo "**** install lighttpd ****" && \
+    apk add --no-cache && \
+    apk add  lighttpd php7-common php7-iconv php7-json php7-gd php7-curl php7-xml php7-mysqli php7-imap php7-cgi fcgi php7-pdo php7-pdo_mysql php7-soap php7-xmlrpc php7-posix php7-mcrypt php7-gettext php7-ldap php7-ctype php7-dom && \
+    #Enable FAST CGI
+    echo "include \"mod_fastcgi.conf\"" >> /etc/lighttpd/lighttpd.conf && \
+    sed -i -- 's/php-cgi/php-cgi7/g' /etc/lighttpd/mod_fastcgi.conf && \
+    # simple test page 
+    echo "<?php phpinfo(); ?>" > /var/www/localhost/htdocs/index.php && \
+    mkdir /var/run/lighttpd && \
+    touch /var/run/lighttpd/php-fastcgi.socket && \
+    chown -R lighttpd:lighttpd /var/run/lighttpd && \
+    chown -R lighttpd:lighttpd /var/www/localhost && \
+    chown -R lighttpd:lighttpd /var/log/lighttpd && \
+    rm -rf /var/cache/*
+
+EXPOSE 80
+WORKDIR /var/www/localhost/htdocs
+COPY index.html .
+CMD ["/usr/sbin/lighttpd","-D","-f","/etc/lighttpd/lighttpd.conf"]
+   </pre> </code>
+    
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+  </body>
+</html>
